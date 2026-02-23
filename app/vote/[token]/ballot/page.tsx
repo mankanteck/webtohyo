@@ -125,7 +125,11 @@ export default function BallotPage() {
         return;
       }
 
-      if (!res.ok) throw new Error("送信に失敗しました");
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        const detail = errBody?.detail ?? errBody?.error ?? `HTTP ${res.status}`;
+        throw new Error(`送信に失敗しました (${detail})`);
+      }
 
       // 下書き削除
       localStorage.removeItem(LS_KEY(token));

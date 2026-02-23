@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { voteStore, unitStore, agendaStore } from "@/lib/store";
-import type { VoteChoice } from "@/lib/store";
+import { voteStore, unitStore } from "@/lib/dynamodb";
+import type { VoteChoice } from "@/lib/dynamodb";
 
 export async function GET(req: NextRequest) {
-  const unitId = req.nextUrl.searchParams.get("unitId");
+  const unitId   = req.nextUrl.searchParams.get("unitId");
   const agendaId = req.nextUrl.searchParams.get("agendaId");
 
   if (unitId && agendaId) {
-    const vote = voteStore.getByUnitAndAgenda(unitId, agendaId);
-    return NextResponse.json(vote ?? null);
+    return NextResponse.json(await voteStore.getByUnitAndAgenda(unitId, agendaId) ?? null);
   }
-  if (unitId) return NextResponse.json(voteStore.getByUnitId(unitId));
-  if (agendaId) return NextResponse.json(voteStore.getByAgendaId(agendaId));
-  return NextResponse.json(voteStore.getAll());
+  if (unitId)   return NextResponse.json(await voteStore.getByUnitId(unitId));
+  if (agendaId) return NextResponse.json(await voteStore.getByAgendaId(agendaId));
+  return NextResponse.json(await voteStore.getAll());
 }
 
 /**
@@ -27,10 +26,10 @@ export async function POST(req: NextRequest) {
 
   const {
     unitId,
-    ballots, // [{ agendaId, choice, comment }]
-    votedSource = "WEB",
-    isProxyEntry = false,
-    inputBy = "",
+    ballots,
+    votedSource   = "WEB",
+    isProxyEntry  = false,
+    inputBy       = "",
     forceOverwrite = false,
   } = body;
 
@@ -38,52 +37,50 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unitId and ballots are required" }, { status: 400 });
   }
 
-  const unit = unitStore.getById(unitId);
+  const unit = await unitStore.getById(unitId);
   if (!unit) {
     return NextResponse.json({ error: "Unit not found" }, { status: 404 });
   }
 
-  // 二重投票チェック（WEBからの場合はforceOverwriteがない限り拒否）
   if (unit.isVoted && !forceOverwrite) {
     return NextResponse.json(
-      {
-        error: "ALREADY_VOTED",
-        votedSource: unit.votedSource,
-        votedAt: unit.votedAt,
-      },
+      { error: "ALREADY_VOTED", votedSource: unit.votedSource, votedAt: unit.votedAt },
       { status: 409 }
     );
   }
 
   const now = new Date().toISOString();
+  const existingVotes = await voteStore.getByUnitId(unitId);
 
-  // 既存投票を削除（上書き時）
-  const existingVotes = voteStore.getByUnitId(unitId);
-
-  // 新しい Vote レコードを作成
   const newVotes = ballots.map((b: { agendaId: string; choice: VoteChoice; comment?: string }) => {
     const existing = existingVotes.find((v) => v.agendaId === b.agendaId);
     return {
-      id: existing?.id ?? nanoid(),
+      id:          existing?.id ?? nanoid(),
       unitId,
-      agendaId: b.agendaId,
-      choice: b.choice,
-      comment: b.comment ?? "",
+      agendaId:    b.agendaId,
+      choice:      b.choice,
+      comment:     b.comment ?? "",
       isProxyEntry,
       inputBy,
-      createdAt: existing?.createdAt ?? now,
+      createdAt:   existing?.createdAt ?? now,
     };
   });
 
-  voteStore.saveMany(newVotes);
-
-  // Unit を更新
-  unitStore.save({
-    ...unit,
-    isVoted: true,
-    votedAt: now,
-    votedSource,
-  });
+  try {
+    await voteStore.saveMany(newVotes);
+    await unitStore.save({
+      ...unit,
+      isVoted:     true,
+      votedAt:     now,
+      votedSource,
+    });
+  } catch (err) {
+    console.error("[votes POST] DynamoDB write error:", err);
+    return NextResponse.json(
+      { error: "STORE_WRITE_ERROR", detail: String(err) },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ ok: true, votes: newVotes });
 }

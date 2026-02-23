@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { condoStore, unitStore, agendaStore } from "@/lib/store";
+import { condoStore, unitStore, agendaStore } from "@/lib/dynamodb";
 
-/**
- * CSVインポートAPI
- * CSV形式: roomNo,ownerName,votingRights
- *
- * ボディ:
- * {
- *   condoName: string,
- *   condoCd: string,
- *   csvData: { roomNo: string, ownerName: string, votingRights: number }[],
- *   agendas: { title: string, resolutionType: "ORDINARY"|"SPECIAL" }[]
- * }
- */
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { nanoid } = await import("nanoid");
@@ -28,8 +16,8 @@ export async function POST(req: NextRequest) {
 
   const now = new Date().toISOString();
 
-  // Condo を作成または更新
-  const existingCondos = condoStore.getAll();
+  // Condo 作成または更新
+  const existingCondos = await condoStore.getAll();
   let condo = existingCondos.find((c) => c.condoCd === condoCd);
 
   const totalVotingRights = csvData.reduce(
@@ -41,58 +29,50 @@ export async function POST(req: NextRequest) {
     condo = {
       id: nanoid(),
       condoCd,
-      name: condoName,
-      totalUnits: csvData.length,
+      name:             condoName,
+      totalUnits:       csvData.length,
       totalVotingRights,
-      createdAt: now,
+      createdAt:        now,
     };
-    condoStore.save(condo);
   } else {
-    condo = {
-      ...condo,
-      name: condoName,
-      totalUnits: csvData.length,
-      totalVotingRights,
-    };
-    condoStore.save(condo);
+    condo = { ...condo, name: condoName, totalUnits: csvData.length, totalVotingRights };
   }
+  await condoStore.save(condo);
 
-  // Unit を作成（accessToken = roomNo短縮ID + nanoid(8)）
+  // Unit 作成（accessToken = roomNo-nanoid(8)）
   const units = csvData.map(
     (row: { roomNo: string; ownerName: string; votingRights: number }) => ({
-      id: nanoid(),
-      condoId: condo!.id,
-      roomNo: String(row.roomNo),
-      ownerName: String(row.ownerName || ""),
+      id:           nanoid(),
+      condoId:      condo!.id,
+      roomNo:       String(row.roomNo),
+      ownerName:    String(row.ownerName || ""),
       votingRights: Number(row.votingRights) || 1,
-      accessToken: `${String(row.roomNo)}-${nanoid(8)}`,
-      isVoted: false,
-      votedAt: undefined,
-      votedSource: undefined,
-      createdAt: now,
+      accessToken:  `${String(row.roomNo)}-${nanoid(8)}`,
+      isVoted:      false,
+      createdAt:    now,
     })
   );
-
-  unitStore.saveMany(units);
+  await unitStore.saveMany(units);
 
   // 議案を保存
-  if (agendas.length > 0) {
-    const agendaRecords = agendas.map(
-      (a: { title: string; resolutionType?: string }, i: number) => ({
-        id: nanoid(),
-        condoId: condo!.id,
-        order: i + 1,
-        title: a.title,
-        resolutionType: (a.resolutionType || "ORDINARY") as "ORDINARY" | "SPECIAL",
-        createdAt: now,
-      })
-    );
-    agendaStore.saveMany(agendaRecords);
+  const validAgendas = (agendas as { title: string; resolutionType?: string }[]).filter(
+    (a) => a.title?.trim()
+  );
+  if (validAgendas.length > 0) {
+    const agendaRecords = validAgendas.map((a, i) => ({
+      id:             nanoid(),
+      condoId:        condo!.id,
+      order:          i + 1,
+      title:          a.title,
+      resolutionType: (a.resolutionType || "ORDINARY") as "ORDINARY" | "SPECIAL",
+      createdAt:      now,
+    }));
+    await agendaStore.saveMany(agendaRecords);
   }
 
   return NextResponse.json({
     condo,
-    unitsCreated: units.length,
-    agendasCreated: agendas.length,
+    unitsCreated:   units.length,
+    agendasCreated: validAgendas.length,
   });
 }

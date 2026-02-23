@@ -1,60 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
-import { condoStore, unitStore, voteStore, agendaStore } from "@/lib/store";
+import { condoStore, unitStore, voteStore, agendaStore } from "@/lib/dynamodb";
 
 export async function GET(req: NextRequest) {
   const condoId = req.nextUrl.searchParams.get("condoId");
   if (!condoId) return NextResponse.json({ error: "condoId required" }, { status: 400 });
 
-  const condo = condoStore.getById(condoId);
+  const [condo, units, agendas, allVotes] = await Promise.all([
+    condoStore.getById(condoId),
+    unitStore.getByCondoId(condoId),
+    agendaStore.getByCondoId(condoId),
+    voteStore.getAll(),
+  ]);
+
   if (!condo) return NextResponse.json({ error: "Condo not found" }, { status: 404 });
 
-  const units = unitStore.getByCondoId(condoId);
-  const agendas = agendaStore.getByCondoId(condoId).sort((a, b) => a.order - b.order);
-  const allVotes = voteStore.getAll();
+  const sortedAgendas = agendas.sort((a, b) => a.order - b.order);
 
-  const totalUnits = units.length;
-  const votedUnits = units.filter((u) => u.isVoted);
-  const webVoted = votedUnits.filter((u) => u.votedSource === "WEB");
-  const paperVoted = votedUnits.filter((u) => u.votedSource === "PAPER");
-  const notVoted = units.filter((u) => !u.isVoted);
+  const votedUnits    = units.filter((u) => u.isVoted);
+  const webVoted      = votedUnits.filter((u) => u.votedSource === "WEB");
+  const paperVoted    = votedUnits.filter((u) => u.votedSource === "PAPER");
+  const notVoted      = units.filter((u) => !u.isVoted);
 
-  const totalVotingRights = units.reduce((sum, u) => sum + u.votingRights, 0);
-  const votedVotingRights = votedUnits.reduce((sum, u) => sum + u.votingRights, 0);
+  const totalVotingRights  = units.reduce((s, u) => s + u.votingRights, 0);
+  const votedVotingRights  = votedUnits.reduce((s, u) => s + u.votingRights, 0);
+  const quorumTarget       = Math.ceil(units.length / 2);
 
-  const quorumTarget = Math.ceil(totalUnits / 2);
-  const remaining = Math.max(0, quorumTarget - votedUnits.length);
-
-  // 議案別集計
-  const agendaStats = agendas.map((agenda) => {
-    const votes = allVotes.filter((v) => v.agendaId === agenda.id);
-    const forCount = votes.filter((v) => v.choice === "FOR").length;
-    const againstCount = votes.filter((v) => v.choice === "AGAINST").length;
-    const abstainCount = votes.filter((v) => v.choice === "ABSTAIN").length;
+  const agendaStats = sortedAgendas.map((agenda) => {
+    const votes      = allVotes.filter((v) => v.agendaId === agenda.id);
     return {
-      agendaId: agenda.id,
-      title: agenda.title,
-      order: agenda.order,
+      agendaId:       agenda.id,
+      title:          agenda.title,
+      order:          agenda.order,
       resolutionType: agenda.resolutionType,
-      FOR: forCount,
-      AGAINST: againstCount,
-      ABSTAIN: abstainCount,
-      total: votes.length,
+      FOR:            votes.filter((v) => v.choice === "FOR").length,
+      AGAINST:        votes.filter((v) => v.choice === "AGAINST").length,
+      ABSTAIN:        votes.filter((v) => v.choice === "ABSTAIN").length,
+      total:          votes.length,
     };
   });
 
   return NextResponse.json({
     condo,
-    totalUnits,
-    votedCount: votedUnits.length,
-    webVotedCount: webVoted.length,
-    paperVotedCount: paperVoted.length,
-    notVotedCount: notVoted.length,
+    totalUnits:        units.length,
+    votedCount:        votedUnits.length,
+    webVotedCount:     webVoted.length,
+    paperVotedCount:   paperVoted.length,
+    notVotedCount:     notVoted.length,
     quorumTarget,
-    remaining,
+    remaining:         Math.max(0, quorumTarget - votedUnits.length),
     totalVotingRights,
     votedVotingRights,
-    quorumReached: votedUnits.length >= quorumTarget,
-    notVotedUnits: notVoted,
+    quorumReached:     votedUnits.length >= quorumTarget,
+    notVotedUnits:     notVoted,
     agendaStats,
   });
 }

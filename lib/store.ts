@@ -1,11 +1,23 @@
 /**
  * プロトタイプ用ローカルJSONストア
  * 本番はAmplify Gen 2 (AppSync + DynamoDB) に置き換える
+ *
+ * AWS Lambda（Amplify Hosting）では process.cwd() が読み取り専用のため、
+ * 書き込み可能な /tmp/webtohyo-data を使用する。
+ * 初回アクセス時にバンドル済みの data/ ファイルを /tmp へコピーする。
  */
 import fs from "fs";
 import path from "path";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+// Lambda環境の判定（AWS_LAMBDA_FUNCTION_NAME または AMPLIFY 系の環境変数）
+const IS_LAMBDA = !!(
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  process.env.AWS_EXECUTION_ENV ||
+  process.env._HANDLER
+);
+
+const BUNDLE_DATA_DIR = path.join(process.cwd(), "data");
+const DATA_DIR = IS_LAMBDA ? "/tmp/webtohyo-data" : BUNDLE_DATA_DIR;
 
 export type VotedSource = "WEB" | "PAPER";
 export type ResolutionType = "ORDINARY" | "SPECIAL";
@@ -56,6 +68,16 @@ export interface Vote {
 function ensureDir() {
   if (!fs.existsSync(DATA_DIR)) {
     fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+  // Lambda: バンドル済みJSONを /tmp にコピー（まだコピーされていないファイルのみ）
+  if (IS_LAMBDA && fs.existsSync(BUNDLE_DATA_DIR)) {
+    for (const file of ["condos.json", "units.json", "agendas.json", "votes.json"]) {
+      const src = path.join(BUNDLE_DATA_DIR, file);
+      const dst = path.join(DATA_DIR, file);
+      if (!fs.existsSync(dst) && fs.existsSync(src)) {
+        fs.copyFileSync(src, dst);
+      }
+    }
   }
 }
 
