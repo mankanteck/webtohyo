@@ -1,0 +1,56 @@
+[
+  {
+    "id": "8Yj5gDekFiTvz2XdwhwTJ",
+    "condoId": "jDrvK1hlZBJN_44s6KAT2",
+    "roomNo": "101",
+    "ownerName": "田中 太郎",
+    "votingRights": 1,
+    "accessToken": "101-nIZo_blL",
+    "isVoted": true,
+    "createdAt": "2026-02-23T08:36:00.992Z",
+    "votedAt": "2026-02-23T08:38:03.788Z",
+    "votedSource": "WEB"
+  },
+  {
+    "id": "Z9S6oycSb07uRHNWNZsTb",
+    "condoId": "jDrvK1hlZBJN_44s6KAT2",
+    "roomNo": "102",
+    "ownerName": "鈴木 花子",
+    "votingRights": 1,
+    "accessToken": "102-QtcZQp2w",
+    "isVoted": false,
+    "createdAt": "2026-02-23T08:36:00.992Z"
+  },
+  {
+    "id": "nWu1wt-1J0AVYiYRojc7N",
+    "condoId": "jDrvK1hlZBJN_44s6KAT2",
+    "roomNo": "103",
+    "ownerName": "佐藤 次郎",
+    "votingRights": 1.5,
+    "accessToken": "103-eZZBt-2O",
+    "isVoted": false,
+    "createdAt": "2026-02-23T08:36:00.992Z"
+  },
+  {
+    "id": "kwwYkDXJm89xS2VqtLxHk",
+    "condoId": "jDrvK1hlZBJN_44s6KAT2",
+    "roomNo": "201",
+    "ownerName": "山田 三郎",
+    "votingRights": 1,
+    "accessToken": "201-VuGOhdrk",
+    "isVoted": false,
+    "createdAt": "2026-02-23T08:36:00.992Z"
+  },
+  {
+    "id": "3pZVvOVePkGi2dZp_lQLl",
+    "condoId": "jDrvK1hlZBJN_44s6KAT2",
+    "roomNo": "202",
+    "ownerName": "伊藤 四郎",
+    "votingRights": 1,
+    "accessToken": "202-_utQetra",
+    "isVoted": true,
+    "createdAt": "2026-02-23T08:36:00.992Z",
+    "votedAt": "2026-02-23T08:37:03.444Z",
+    "votedSource": "PAPER"
+  }
+]

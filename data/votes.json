@@ -1,0 +1,42 @@
+[
+  {
+    "id": "VF3Dd3q3QYt4Jijkox5mv",
+    "unitId": "3pZVvOVePkGi2dZp_lQLl",
+    "agendaId": "xU-l2jGWSG4tiWyemTn2v",
+    "choice": "FOR",
+    "comment": "",
+    "isProxyEntry": true,
+    "inputBy": "田中",
+    "createdAt": "2026-02-23T08:37:03.444Z"
+  },
+  {
+    "id": "IwvDufwkulTjuIcTptoaV",
+    "unitId": "3pZVvOVePkGi2dZp_lQLl",
+    "agendaId": "e4Hu8Onr4_AZgSDLhLkXe",
+    "choice": "FOR",
+    "comment": "",
+    "isProxyEntry": true,
+    "inputBy": "田中",
+    "createdAt": "2026-02-23T08:37:03.444Z"
+  },
+  {
+    "id": "mq2U4vGQlbsbX8M3nThmS",
+    "unitId": "8Yj5gDekFiTvz2XdwhwTJ",
+    "agendaId": "xU-l2jGWSG4tiWyemTn2v",
+    "choice": "FOR",
+    "comment": "",
+    "isProxyEntry": false,
+    "inputBy": "",
+    "createdAt": "2026-02-23T08:38:03.788Z"
+  },
+  {
+    "id": "5v_aSogj9vOnsoJq-t4nm",
+    "unitId": "8Yj5gDekFiTvz2XdwhwTJ",
+    "agendaId": "e4Hu8Onr4_AZgSDLhLkXe",
+    "choice": "ABSTAIN",
+    "comment": "",
+    "isProxyEntry": false,
+    "inputBy": "",
+    "createdAt": "2026-02-23T08:38:03.788Z"
+  }
+]
