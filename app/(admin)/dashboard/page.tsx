@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { generateReminderPdf } from "@/lib/pdf";
+import { generateReminderPdf, generateQrSheetPdf } from "@/lib/pdf";
 
 interface Stats {
   condo: { id: string; name: string; condoCd: string };
@@ -25,6 +25,13 @@ interface Stats {
   totalVotingRights: number;
   votedVotingRights: number;
   quorumReached: boolean;
+  allUnits: {
+    id: string;
+    roomNo: string;
+    ownerName: string;
+    accessToken: string;
+    votingRights: number;
+  }[];
   notVotedUnits: {
     id: string;
     roomNo: string;
@@ -63,6 +70,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [qrPdfLoading, setQrPdfLoading] = useState(false);
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
@@ -121,6 +129,16 @@ export default function DashboardPage() {
     }
   };
 
+  const handleQrSheetGenerate = async () => {
+    if (!stats) return;
+    setQrPdfLoading(true);
+    try {
+      await generateQrSheetPdf(stats.condo.name, stats.allUnits, origin);
+    } finally {
+      setQrPdfLoading(false);
+    }
+  };
+
   const progressPct = stats
     ? Math.min(100, Math.round((stats.votedCount / stats.totalUnits) * 100))
     : 0;
@@ -130,12 +148,21 @@ export default function DashboardPage() {
       {/* ページタイトル */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">管理ダッシュボード</h1>
-        <button
-          onClick={() => selectedCondoId && loadStats(selectedCondoId)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm font-medium"
-        >
-          🔄 更新
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleQrSheetGenerate}
+            disabled={qrPdfLoading || !stats}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {qrPdfLoading ? "⏳ 生成中..." : "📱 全戸QRコードPDF"}
+          </button>
+          <button
+            onClick={() => selectedCondoId && loadStats(selectedCondoId)}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm font-medium"
+          >
+            🔄 更新
+          </button>
+        </div>
       </div>
 
       {!stats && (

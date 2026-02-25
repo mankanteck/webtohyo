@@ -52,6 +52,13 @@ export async function GET(req: NextRequest) {
     votedVotingRights,
     quorumReached:     votedUnits.length >= quorumTarget,
     notVotedUnits:     notVoted,
+    allUnits:          units.map((u) => ({
+      id:           u.id,
+      roomNo:       u.roomNo,
+      ownerName:    u.ownerName,
+      accessToken:  u.accessToken,
+      votingRights: u.votingRights,
+    })),
     agendaStats,
   });
 }

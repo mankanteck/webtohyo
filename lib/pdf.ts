@@ -157,6 +157,118 @@ function buildPageHtml(
   `;
 }
 
+/** A4に2戸ずつ並べる初回配布用QRコードシート */
+function buildQrCardHtml(
+  condoName: string,
+  unit: NotVotedUnit,
+  url: string,
+  qrDataUrl: string
+): string {
+  const owner = unit.ownerName ? `${unit.ownerName} 様` : "区分所有者 様";
+  return `
+    <div style="
+      width: 714px;
+      height: 480px;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      font-family: 'Hiragino Kaku Gothic ProN','Hiragino Sans','Meiryo','Yu Gothic',sans-serif;
+      box-sizing: border-box;
+      display: flex;
+      overflow: hidden;
+    ">
+      <!-- 左カラム: テキスト -->
+      <div style="flex: 1; padding: 28px 28px 28px 32px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">${condoName}　総会 電子投票</div>
+          <div style="font-size: 52px; font-weight: bold; color: #0f172a; line-height: 1.1;">
+            ${unit.roomNo}
+          </div>
+          <div style="font-size: 13px; color: #64748b; margin-top: 2px;">号室</div>
+          <div style="font-size: 18px; color: #1e293b; font-weight: 600; margin-top: 10px;">${owner}</div>
+          <div style="font-size: 12px; color: #64748b; margin-top: 4px;">議決権: ${unit.votingRights} 口</div>
+        </div>
+        <div>
+          <div style="font-size: 11px; color: #475569; margin-bottom: 4px;">またはブラウザでアクセス：</div>
+          <div style="font-size: 10px; color: #1d4ed8; word-break: break-all; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;">${url}</div>
+        </div>
+      </div>
+      <!-- 右カラム: QR -->
+      <div style="width: 220px; background: #eff6ff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; gap: 12px;">
+        <div style="font-size: 12px; font-weight: bold; color: #1e40af; text-align: center;">QRコードを<br>読み取って投票</div>
+        <img src="${qrDataUrl}" style="width: 160px; height: 160px; display: block;" />
+        <div style="font-size: 10px; color: #64748b; text-align: center;">このカードはお部屋専用です<br>他の方と共有しないでください</div>
+      </div>
+    </div>
+  `;
+}
+
+export async function generateQrSheetPdf(
+  condoName: string,
+  units: NotVotedUnit[],
+  baseUrl: string
+): Promise<void> {
+  const { default: jsPDF } = await import("jspdf");
+  const { default: html2canvas } = await import("html2canvas");
+  const QRCode = await import("qrcode");
+
+  // A4横: 297 x 210mm（2枚/ページ）
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  const container = document.createElement("div");
+  container.style.cssText = "position:fixed;left:-9999px;top:0;z-index:-1;";
+  document.body.appendChild(container);
+
+  try {
+    for (let i = 0; i < units.length; i += 2) {
+      if (i > 0) doc.addPage();
+
+      for (let j = 0; j < 2; j++) {
+        const unit = units[i + j];
+        if (!unit) break;
+
+        const url = `${baseUrl}/vote/${unit.accessToken}`;
+        const qrDataUrl = await QRCode.toDataURL(url, {
+          width: 320,
+          margin: 1,
+          errorCorrectionLevel: "H",
+        });
+
+        container.innerHTML = buildQrCardHtml(condoName, unit, url, qrDataUrl);
+        const cardEl = container.firstElementChild as HTMLElement;
+
+        const canvas = await html2canvas(cardEl, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          width: 714,
+          height: 480,
+        });
+
+        const imgData = canvas.toDataURL("image/jpeg", 0.92);
+        // A4(210×297mm) に2枚配置: 上=y:10mm, 下=y:158mm, 高さ=140mm
+        const yOffset = j === 0 ? 10 : 157;
+        doc.addImage(imgData, "JPEG", 5, yOffset, 200, 134);
+
+        // 切り取り線
+        if (j === 0 && units[i + 1]) {
+          doc.setDrawColor(180, 180, 180);
+          doc.setLineDashPattern([2, 2], 0);
+          doc.line(5, 149, 205, 149);
+          doc.setLineDashPattern([], 0);
+        }
+      }
+    }
+
+    doc.save(
+      `QRコード配布物_${condoName}_${new Date().toLocaleDateString("ja-JP").replace(/\//g, "")}.pdf`
+    );
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
 export async function generateReminderPdf(
   condoName: string,
   units: NotVotedUnit[],
