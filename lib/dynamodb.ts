@@ -25,7 +25,7 @@ import {
 
 // ── クライアント初期化 ─────────────────────────────────────────────────────────
 const ddbClient = new DynamoDBClient({
-  region: process.env.DYNAMODB_REGION ?? process.env.AWS_REGION ?? "ap-northeast-1",
+  region: process.env.DYNAMODB_REGION ?? process.env.AWS_REGION ?? "ap-northeast-1",  // AWS_REGION is set automatically in Lambda
 });
 
 export const doc = DynamoDBDocumentClient.from(ddbClient, {
@@ -34,10 +34,10 @@ export const doc = DynamoDBDocumentClient.from(ddbClient, {
 
 // ── テーブル名 ────────────────────────────────────────────────────────────────
 const TABLES = {
-  condos:  process.env.DYNAMODB_TABLE_CONDOS   ?? "webtohyo-condos",
-  units:   process.env.DYNAMODB_TABLE_UNITS    ?? "webtohyo-units",
-  agendas: process.env.DYNAMODB_TABLE_AGENDAS  ?? "webtohyo-agendas",
-  votes:   process.env.DYNAMODB_TABLE_VOTES    ?? "webtohyo-votes",
+  condos:  process.env.DYNAMODB_TABLE_CONDOS   ?? "webtohyo-condos-prod",
+  units:   process.env.DYNAMODB_TABLE_UNITS    ?? "webtohyo-units-prod",
+  agendas: process.env.DYNAMODB_TABLE_AGENDAS  ?? "webtohyo-agendas-prod",
+  votes:   process.env.DYNAMODB_TABLE_VOTES    ?? "webtohyo-votes-prod",
 };
 
 // ── 型定義（lib/store.ts と共通） ─────────────────────────────────────────────
