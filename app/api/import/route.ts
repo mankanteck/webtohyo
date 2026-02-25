@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { condoStore, unitStore, agendaStore } from "@/lib/dynamodb";
 
 export async function POST(req: NextRequest) {
+  try {
   const body = await req.json();
   const { nanoid } = await import("nanoid");
 
@@ -75,4 +76,11 @@ export async function POST(req: NextRequest) {
     unitsCreated:   units.length,
     agendasCreated: validAgendas.length,
   });
+  } catch (err) {
+    console.error("[import POST] error:", err);
+    return NextResponse.json(
+      { error: "INTERNAL_ERROR", detail: String(err) },
+      { status: 500 }
+    );
+  }
 }

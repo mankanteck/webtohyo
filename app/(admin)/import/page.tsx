@@ -95,11 +95,11 @@ export default function ImportPage() {
           agendas: validAgendas,
         }),
       });
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "インポートに失敗しました");
+        throw new Error(data.detail || data.error || `サーバーエラー (${res.status})`);
       }
-      const data = await res.json();
       setResult(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : "エラーが発生しました");
