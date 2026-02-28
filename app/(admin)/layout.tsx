@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "aws-amplify/auth";
+import { signOut, deleteUser } from "aws-amplify/auth";
 
 const navItems = [
   { href: "/dashboard", label: "ダッシュボード", icon: "📊" },
@@ -42,6 +42,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </Link>
               ))}
             </nav>
+            <button
+              onClick={async () => {
+                if (!window.confirm("アカウントを削除しますか？この操作は取り消せません。")) return;
+                try {
+                  await deleteUser();
+                  window.location.href = "/login";
+                } catch (error) {
+                  console.error("削除エラー:", error);
+                  alert("アカウントの削除に失敗しました。");
+                }
+              }}
+              className="ml-2 px-3 py-2 rounded-lg text-sm font-medium text-red-300 hover:bg-red-800 hover:text-white transition-colors"
+            >
+              アカウント削除
+            </button>
             <button
               onClick={async () => {
                 await signOut();
