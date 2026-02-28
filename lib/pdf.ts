@@ -254,9 +254,11 @@ export async function generateQrSheetPdf(
         // 切り取り線
         if (j === 0 && units[i + 1]) {
           doc.setDrawColor(180, 180, 180);
-          doc.setLineDashPattern([2, 2], 0);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (doc as any).setLineDashPattern([2, 2], 0);
           doc.line(5, 149, 205, 149);
-          doc.setLineDashPattern([], 0);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (doc as any).setLineDashPattern([], 0);
         }
       }
     }
