@@ -22,7 +22,7 @@ function LoginContent() {
         <h1 className="text-xl font-bold text-slate-800">マンション総会</h1>
         <p className="text-sm text-slate-500">電子投票管理システム</p>
       </div>
-      <Authenticator hideSignUp />
+      <Authenticator />
     </div>
   );
 }
