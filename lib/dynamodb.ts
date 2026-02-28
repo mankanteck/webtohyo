@@ -21,6 +21,7 @@ import {
   QueryCommand,
   ScanCommand,
   BatchWriteCommand,
+  DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 // ── クライアント初期化 ─────────────────────────────────────────────────────────
@@ -142,6 +143,10 @@ export const unitStore = {
     return unit;
   },
 
+  async deleteById(id: string): Promise<void> {
+    await doc.send(new DeleteCommand({ TableName: TABLES.units, Key: { id } }));
+  },
+
   async saveMany(units: Unit[]): Promise<void> {
     await batchPut(TABLES.units, units as unknown as Record<string, unknown>[]);
   },
@@ -176,6 +181,10 @@ export const agendaStore = {
   async save(agenda: Agenda): Promise<Agenda> {
     await doc.send(new PutCommand({ TableName: TABLES.agendas, Item: agenda }));
     return agenda;
+  },
+
+  async deleteById(id: string): Promise<void> {
+    await doc.send(new DeleteCommand({ TableName: TABLES.agendas, Key: { id } }));
   },
 
   async saveMany(agendas: Agenda[]): Promise<void> {

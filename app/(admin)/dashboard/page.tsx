@@ -78,18 +78,11 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    fetch("/api/units")
+    fetch("/api/condos")
       .then((r) => r.json())
-      .then((units: { condoId: string }[]) => {
-        const ids = [...new Set(units.map((u) => u.condoId))];
-        if (ids.length === 0) return;
-        fetch("/api/stats?condoId=" + ids[0])
-          .then((r) => r.json())
-          .then((s) => {
-            setCondos([s.condo]);
-            setSelectedCondoId(s.condo.id);
-            setStats(s);
-          });
+      .then((cs: Condo[]) => {
+        setCondos(cs);
+        if (cs.length > 0) setSelectedCondoId(cs[0].id);
       });
   }, []);
 
@@ -164,6 +157,26 @@ export default function DashboardPage() {
           </button>
         </div>
       </div>
+
+      {/* マンション選択（複数登録時のみ表示） */}
+      {condos.length > 1 && (
+        <div className="bg-white rounded-xl p-4 shadow flex items-center gap-3">
+          <label className="text-sm font-medium text-slate-600 whitespace-nowrap">
+            管理組合：
+          </label>
+          <select
+            value={selectedCondoId}
+            onChange={(e) => setSelectedCondoId(e.target.value)}
+            className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {condos.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}（{c.condoCd}）
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {!stats && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">

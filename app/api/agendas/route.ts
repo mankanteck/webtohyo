@@ -25,10 +25,20 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(agenda, { status: 201 });
 }
 
+export async function PUT(req: NextRequest) {
+  const body = await req.json();
+  const { id, title, resolutionType } = body;
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  const existing = await agendaStore.getById(id);
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const updated = { ...existing, title, resolutionType };
+  await agendaStore.save(updated);
+  return NextResponse.json(updated);
+}
+
 export async function DELETE(req: NextRequest) {
   const id = req.nextUrl.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
-  const all = (await agendaStore.getAll()).filter((a) => a.id !== id);
-  await agendaStore.saveMany(all);
+  await agendaStore.deleteById(id);
   return NextResponse.json({ ok: true });
 }
