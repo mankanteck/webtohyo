@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AmplifyProvider from "./AmplifyProvider";
 
 export const metadata: Metadata = {
   title: "マンション総会 電子投票システム",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <AmplifyProvider>{children}</AmplifyProvider>
+      </body>
     </html>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "aws-amplify/auth";
 
 const navItems = [
   { href: "/dashboard", label: "ダッシュボード", icon: "📊" },
@@ -24,22 +25,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div className="text-blue-200 text-xs">電子投票管理システム</div>
             </div>
           </div>
-          <nav className="flex gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === item.href
-                    ? "bg-white text-blue-900"
-                    : "text-blue-100 hover:bg-blue-800"
-                }`}
-              >
-                <span>{item.icon}</span>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="flex items-center gap-2">
+            <nav className="flex gap-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    pathname === item.href
+                      ? "bg-white text-blue-900"
+                      : "text-blue-100 hover:bg-blue-800"
+                  }`}
+                >
+                  <span>{item.icon}</span>
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+            <button
+              onClick={() => signOut()}
+              className="ml-2 px-3 py-2 rounded-lg text-sm font-medium text-blue-200 hover:bg-blue-800 hover:text-white transition-colors"
+            >
+              ログアウト
+            </button>
+          </div>
         </div>
       </header>
 
