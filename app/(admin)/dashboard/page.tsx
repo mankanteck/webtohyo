@@ -71,6 +71,7 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [qrPdfLoading, setQrPdfLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
@@ -87,15 +88,12 @@ export default function DashboardPage() {
   }, []);
 
   const loadStats = useCallback(
-    (condoId: string) => {
+    async (condoId: string) => {
       if (!condoId) return;
       setLoading(true);
-      fetch(`/api/stats?condoId=${condoId}`)
-        .then((r) => r.json())
-        .then((s) => {
-          setStats(s);
-          setLoading(false);
-        });
+      const s = await fetch(`/api/stats?condoId=${condoId}`).then((r) => r.json());
+      setStats(s);
+      setLoading(false);
     },
     []
   );
@@ -150,10 +148,16 @@ export default function DashboardPage() {
             {qrPdfLoading ? "⏳ 生成中..." : "📱 全戸QRコードPDF"}
           </button>
           <button
-            onClick={() => selectedCondoId && loadStats(selectedCondoId)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm font-medium"
+            onClick={async () => {
+              if (!selectedCondoId || refreshing) return;
+              setRefreshing(true);
+              await loadStats(selectedCondoId);
+              setRefreshing(false);
+            }}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 text-sm font-medium disabled:opacity-60"
           >
-            🔄 更新
+            {refreshing ? "⏳ 更新中..." : "🔄 更新"}
           </button>
         </div>
       </div>

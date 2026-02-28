@@ -43,7 +43,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               ))}
             </nav>
             <button
-              onClick={() => signOut()}
+              onClick={async () => {
+                await signOut();
+                window.location.href = "/login";
+              }}
               className="ml-2 px-3 py-2 rounded-lg text-sm font-medium text-blue-200 hover:bg-blue-800 hover:text-white transition-colors"
             >
               ログアウト
