@@ -12,10 +12,10 @@
     "mfa_configuration": "NONE",
     "password_policy": {
       "min_length": 8,
-      "require_numbers": true,
-      "require_lowercase": true,
-      "require_uppercase": true,
-      "require_symbols": true
+      "require_numbers": false,
+      "require_lowercase": false,
+      "require_uppercase": false,
+      "require_symbols": false
     },
     "unauthenticated_identities_enabled": true
   }
