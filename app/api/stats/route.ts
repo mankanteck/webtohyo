@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { condoStore, unitStore, voteStore, agendaStore } from "@/lib/dynamodb";
+import { unitStore, voteStore, agendaStore } from "@/lib/dynamodb";
+import { authorizeCondoAccess } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   const condoId = req.nextUrl.searchParams.get("condoId");
   if (!condoId) return NextResponse.json({ error: "condoId required" }, { status: 400 });
 
-  const [condo, units, agendas, allVotes] = await Promise.all([
-    condoStore.getById(condoId),
+  const auth = await authorizeCondoAccess(req, condoId);
+  if (!auth.authorized) return NextResponse.json({ error: "Unauthorized" }, { status: auth.status });
+
+  const condo = auth.condo;
+
+  const [units, agendas, allVotes] = await Promise.all([
     unitStore.getByCondoId(condoId),
     agendaStore.getByCondoId(condoId),
     voteStore.getAll(),
   ]);
-
-  if (!condo) return NextResponse.json({ error: "Condo not found" }, { status: 404 });
 
   const sortedAgendas = agendas.sort((a, b) => a.order - b.order);
 

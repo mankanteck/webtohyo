@@ -55,6 +55,7 @@ interface Condo {
   id: string;
   name: string;
   condoCd: string;
+  isDemo?: boolean;
 }
 
 const VOTE_COLORS: Record<string, string> = {
@@ -134,19 +135,35 @@ export default function DashboardPage() {
     ? Math.min(100, Math.round((stats.votedCount / stats.totalUnits) * 100))
     : 0;
 
+  const selectedCondo = condos.find((c) => c.id === selectedCondoId);
+  const isDemo = selectedCondo?.isDemo === true;
+
   return (
     <div className="space-y-6">
+      {/* デモバナー */}
+      {isDemo && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-center gap-3">
+          <span className="text-2xl">🎭</span>
+          <div>
+            <div className="font-bold text-amber-800">サンプルデータを表示中</div>
+            <div className="text-sm text-amber-700">このマンションはデモ用サンプルです。編集・PDF出力はできません。</div>
+          </div>
+        </div>
+      )}
+
       {/* ページタイトル */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">管理ダッシュボード</h1>
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleQrSheetGenerate}
-            disabled={qrPdfLoading || !stats}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {qrPdfLoading ? "⏳ 生成中..." : "📱 全戸QRコードPDF"}
-          </button>
+          {!isDemo && (
+            <button
+              onClick={handleQrSheetGenerate}
+              disabled={qrPdfLoading || !stats}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {qrPdfLoading ? "⏳ 生成中..." : "📱 全戸QRコードPDF"}
+            </button>
+          )}
           <button
             onClick={async () => {
               if (!selectedCondoId || refreshing) return;
@@ -175,7 +192,7 @@ export default function DashboardPage() {
           >
             {condos.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name}（{c.condoCd}）
+                {c.isDemo ? "[サンプル] " : ""}{c.name}（{c.condoCd}）
               </option>
             ))}
           </select>
@@ -343,13 +360,15 @@ export default function DashboardPage() {
                   {stats.notVotedCount} 件
                 </span>
               </h2>
-              <button
-                onClick={handlePdfGenerate}
-                disabled={pdfLoading || stats.notVotedCount === 0}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {pdfLoading ? "⏳ 生成中..." : "📋 督促状PDF一括生成"}
-              </button>
+              {!isDemo && (
+                <button
+                  onClick={handlePdfGenerate}
+                  disabled={pdfLoading || stats.notVotedCount === 0}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {pdfLoading ? "⏳ 生成中..." : "📋 督促状PDF一括生成"}
+                </button>
+              )}
             </div>
 
             {stats.notVotedUnits.length === 0 ? (

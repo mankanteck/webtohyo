@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { condoStore, unitStore } from "@/lib/dynamodb";
+import { unitStore } from "@/lib/dynamodb";
+import { authorizeCondoAccess } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
   const condoId = req.nextUrl.searchParams.get("condoId");
   if (!condoId) return NextResponse.json({ error: "condoId required" }, { status: 400 });
 
-  const [condo, allUnits] = await Promise.all([
-    condoStore.getById(condoId),
-    unitStore.getByCondoId(condoId),
-  ]);
+  const auth = await authorizeCondoAccess(req, condoId);
+  if (!auth.authorized) return NextResponse.json({ error: "Unauthorized" }, { status: auth.status });
 
-  if (!condo) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const condo = auth.condo;
+  const allUnits = await unitStore.getByCondoId(condoId);
 
   const notVotedUnits = allUnits
     .filter((u) => !u.isVoted)

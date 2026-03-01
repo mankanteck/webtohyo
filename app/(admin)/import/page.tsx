@@ -28,6 +28,7 @@ interface Condo {
   condoCd: string;
   totalUnits: number;
   totalVotingRights: number;
+  isDemo?: boolean;
 }
 
 interface Agenda {
@@ -572,6 +573,9 @@ function ManageTab() {
 
   const inputCls = "border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500";
 
+  const selectedCondo = condos.find((c) => c.id === selectedCondoId);
+  const isDemo = selectedCondo?.isDemo === true;
+
   return (
     <div className="space-y-6">
       {error && (
@@ -592,11 +596,22 @@ function ManageTab() {
           <option value="">-- マンションを選択 --</option>
           {condos.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.name}（{c.condoCd}）
+              {c.isDemo ? "[サンプル] " : ""}{c.name}（{c.condoCd}）
             </option>
           ))}
         </select>
       </div>
+
+      {/* デモバナー */}
+      {isDemo && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-center gap-3">
+          <span className="text-2xl">🎭</span>
+          <div>
+            <div className="font-bold text-amber-800">サンプルデータを表示中</div>
+            <div className="text-sm text-amber-700">このマンションはデモ用サンプルです。編集・削除はできません。</div>
+          </div>
+        </div>
+      )}
 
       {selectedCondoId && (
         <>
@@ -644,18 +659,22 @@ function ManageTab() {
                       <span className="text-xs text-slate-400 shrink-0">
                         {agenda.resolutionType === "ORDINARY" ? "普通決議" : "特別決議"}
                       </span>
-                      <button
-                        onClick={() => startEditAgenda(agenda)}
-                        className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
-                      >
-                        編集
-                      </button>
-                      <button
-                        onClick={() => deleteAgenda(agenda.id)}
-                        className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50"
-                      >
-                        削除
-                      </button>
+                      {!isDemo && (
+                        <>
+                          <button
+                            onClick={() => startEditAgenda(agenda)}
+                            className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
+                          >
+                            編集
+                          </button>
+                          <button
+                            onClick={() => deleteAgenda(agenda.id)}
+                            className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50"
+                          >
+                            削除
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -665,7 +684,7 @@ function ManageTab() {
                 <p className="text-sm text-slate-400 text-center py-4">議案がありません</p>
               )}
 
-              {showAddAgenda ? (
+              {!isDemo && (showAddAgenda ? (
                 <div className="border border-blue-200 rounded-lg p-3 bg-blue-50">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm text-slate-500 shrink-0">第{agendaList.length + 1}号</span>
@@ -706,7 +725,7 @@ function ManageTab() {
                 >
                   + 議案を追加
                 </button>
-              )}
+              ))}
             </div>
           </div>
 
@@ -789,20 +808,22 @@ function ManageTab() {
                             </span>
                           </td>
                           <td className="p-2 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              <button
-                                onClick={() => startEditUnit(unit)}
-                                className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
-                              >
-                                編集
-                              </button>
-                              <button
-                                onClick={() => deleteUnit(unit)}
-                                className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50"
-                              >
-                                削除
-                              </button>
-                            </div>
+                            {!isDemo && (
+                              <div className="flex items-center justify-end gap-1">
+                                <button
+                                  onClick={() => startEditUnit(unit)}
+                                  className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
+                                >
+                                  編集
+                                </button>
+                                <button
+                                  onClick={() => deleteUnit(unit)}
+                                  className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded hover:bg-red-50"
+                                >
+                                  削除
+                                </button>
+                              </div>
+                            )}
                           </td>
                         </>
                       )}
@@ -871,7 +892,7 @@ function ManageTab() {
               </table>
             </div>
 
-            {!showAddUnit && (
+            {!isDemo && !showAddUnit && (
               <button
                 onClick={() => setShowAddUnit(true)}
                 className="mt-3 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"

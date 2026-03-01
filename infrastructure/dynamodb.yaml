@@ -18,9 +18,19 @@ Resources:
       AttributeDefinitions:
         - AttributeName: id
           AttributeType: S
+        - AttributeName: ownerUserId
+          AttributeType: S
       KeySchema:
         - AttributeName: id
           KeyType: HASH
+      GlobalSecondaryIndexes:
+        # ログインユーザーのCondoを取得するために使用
+        - IndexName: ownerUserId-index
+          KeySchema:
+            - AttributeName: ownerUserId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
       Tags:

@@ -49,6 +49,8 @@ export type VoteChoice    = "FOR" | "AGAINST" | "ABSTAIN";
 export interface Condo {
   id: string; condoCd: string; name: string;
   totalUnits: number; totalVotingRights: number; createdAt: string;
+  ownerUserId: string;   // Cognito userSub（デモは "DEMO"）
+  isDemo?: boolean;      // デモフラグ
 }
 export interface Unit {
   id: string; condoId: string; roomNo: string; ownerName: string;
@@ -96,6 +98,25 @@ export const condoStore = {
   async save(condo: Condo): Promise<Condo> {
     await doc.send(new PutCommand({ TableName: TABLES.condos, Item: condo }));
     return condo;
+  },
+
+  async getByOwnerUserId(ownerUserId: string): Promise<Condo[]> {
+    const res = await doc.send(new QueryCommand({
+      TableName: TABLES.condos,
+      IndexName: "ownerUserId-index",
+      KeyConditionExpression: "ownerUserId = :uid",
+      ExpressionAttributeValues: { ":uid": ownerUserId },
+    }));
+    return (res.Items ?? []) as Condo[];
+  },
+
+  async getDemoCondos(): Promise<Condo[]> {
+    const res = await doc.send(new ScanCommand({
+      TableName: TABLES.condos,
+      FilterExpression: "isDemo = :demo",
+      ExpressionAttributeValues: { ":demo": true },
+    }));
+    return (res.Items ?? []) as Condo[];
   },
 };
 

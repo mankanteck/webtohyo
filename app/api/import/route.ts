@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { condoStore, unitStore, agendaStore } from "@/lib/dynamodb";
+import { getUserSub } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
+  const userId = await getUserSub(req);
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const body = await req.json();
   const { nanoid } = await import("nanoid");
 
@@ -17,9 +21,9 @@ export async function POST(req: NextRequest) {
 
   const now = new Date().toISOString();
 
-  // Condo 作成または更新
-  const existingCondos = await condoStore.getAll();
-  let condo = existingCondos.find((c) => c.condoCd === condoCd);
+  // 自分のCondo内で重複チェック
+  const myCondos = await condoStore.getByOwnerUserId(userId);
+  let condo = myCondos.find((c) => c.condoCd === condoCd);
 
   const totalVotingRights = csvData.reduce(
     (sum: number, r: { votingRights: number }) => sum + Number(r.votingRights),
@@ -34,6 +38,7 @@ export async function POST(req: NextRequest) {
       totalUnits:       csvData.length,
       totalVotingRights,
       createdAt:        now,
+      ownerUserId:      userId,
     };
   } else {
     condo = { ...condo, name: condoName, totalUnits: csvData.length, totalVotingRights };
