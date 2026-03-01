@@ -1,10 +1,10 @@
 {
   "version": "1.3",
   "auth": {
-    "user_pool_id": "ap-northeast-1_Ih6Wd7GH3",
+    "user_pool_id": "ap-northeast-1_g1m4MuZAC",
     "aws_region": "ap-northeast-1",
-    "user_pool_client_id": "2qidbdhgahjfqjvv1fh6s7q346",
-    "identity_pool_id": "ap-northeast-1:913b0bb0-26b0-49f9-918b-60ede36b49d2",
+    "user_pool_client_id": "5acq9a4m57nvf1ov6mmsa9schg",
+    "identity_pool_id": "ap-northeast-1:08dda541-d5c0-4658-87e9-38166e5d1b0a",
     "mfa_methods": [],
     "standard_required_attributes": ["email"],
     "username_attributes": ["email"],
@@ -17,6 +17,26 @@
       "require_uppercase": false,
       "require_symbols": false
     },
-    "unauthenticated_identities_enabled": true
+    "unauthenticated_identities_enabled": true,
+    "oauth": {
+      "identity_providers": ["GOOGLE"],
+      "domain": "b502039151c403571516.auth.ap-northeast-1.amazoncognito.com",
+      "scopes": [
+        "phone",
+        "email",
+        "openid",
+        "profile",
+        "aws.cognito.signin.user.admin"
+      ],
+      "redirect_sign_in_uri": [
+        "http://localhost:3000/",
+        "https://mankanteck.com/"
+      ],
+      "redirect_sign_out_uri": [
+        "http://localhost:3000/",
+        "https://mankanteck.com/"
+      ],
+      "response_type": "code"
+    }
   }
 }
