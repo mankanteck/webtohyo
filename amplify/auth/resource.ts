@@ -21,11 +21,4 @@ export const auth = defineAuth({
       ],
     },
   },
-  passwordPolicy: {
-    minLength: 8,
-    requireLowercase: false,
-    requireUppercase: false,
-    requireNumbers: false,
-    requireSymbols: false,
-  },
 });
