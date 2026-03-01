@@ -14,10 +14,12 @@ export const auth = defineAuth({
       callbackUrls: [
         "http://localhost:3000/",
         "https://mankanteck.com/",
+        "https://www.mankanteck.com/",
       ],
       logoutUrls: [
         "http://localhost:3000/",
         "https://mankanteck.com/",
+        "https://www.mankanteck.com/",
       ],
     },
   },

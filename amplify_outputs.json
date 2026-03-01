@@ -30,11 +30,13 @@
       ],
       "redirect_sign_in_uri": [
         "http://localhost:3000/",
-        "https://mankanteck.com/"
+        "https://mankanteck.com/",
+        "https://www.mankanteck.com/"
       ],
       "redirect_sign_out_uri": [
         "http://localhost:3000/",
-        "https://mankanteck.com/"
+        "https://mankanteck.com/",
+        "https://www.mankanteck.com/"
       ],
       "response_type": "code"
     }
