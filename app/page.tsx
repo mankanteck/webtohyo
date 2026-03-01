@@ -9,33 +9,25 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const isOAuthCallback = params.has("code") && params.has("state");
-
-    // Hubリスナーを先に登録（signedInイベントを見逃さないために）
+    // signedIn イベントを先に登録（OAuth完了を取りこぼさないように）
     const unsubscribe = Hub.listen("auth", ({ payload }) => {
       if (payload.event === "signedIn") {
         router.replace("/dashboard");
       }
-      if (payload.event === "signInWithRedirect_failure") {
-        router.replace("/login");
-      }
     });
 
-    // Hubリスナー登録後にgetCurrentUserを呼ぶ
-    // → OAuth完了がuseEffect実行より先だった場合でもここで捕捉できる
+    // 認証済みなら dashboard へ、未認証なら login へ（常に）
+    // OAuthが進行中でも一旦 /login へ行き、そこで signedIn を待つ
     getCurrentUser()
       .then(() => router.replace("/dashboard"))
-      .catch(() => {
-        // OAuthコールバック中は認証完了を待つ（Hubイベントに任せる）
-        // 通常アクセスで未認証ならloginへ
-        if (!isOAuthCallback) {
-          router.replace("/login");
-        }
-      });
+      .catch(() => router.replace("/login"));
 
     return unsubscribe;
   }, [router]);
 
-  return null;
+  return (
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+      <p className="text-slate-400 text-sm">読み込み中...</p>
+    </div>
+  );
 }

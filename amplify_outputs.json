@@ -30,8 +30,11 @@
       ],
       "redirect_sign_in_uri": [
         "http://localhost:3000/",
+        "http://localhost:3000/login",
         "https://mankanteck.com/",
-        "https://www.mankanteck.com/"
+        "https://mankanteck.com/login",
+        "https://www.mankanteck.com/",
+        "https://www.mankanteck.com/login"
       ],
       "redirect_sign_out_uri": [
         "http://localhost:3000/",
