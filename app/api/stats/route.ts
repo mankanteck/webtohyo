@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
   const votedUnits    = units.filter((u) => u.isVoted);
   const webVoted      = votedUnits.filter((u) => u.votedSource === "WEB");
   const paperVoted    = votedUnits.filter((u) => u.votedSource === "PAPER");
-  const notVoted      = units.filter((u) => !u.isVoted);
+  const notVoted      = units.filter((u) => !u.isVoted)
+    .sort((a, b) => a.roomNo.localeCompare(b.roomNo, "ja", { numeric: true }));
 
   const totalVotingRights  = units.reduce((s, u) => s + u.votingRights, 0);
   const votedVotingRights  = votedUnits.reduce((s, u) => s + u.votingRights, 0);

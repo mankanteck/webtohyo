@@ -24,6 +24,7 @@ interface Condo {
   id: string;
   name: string;
   condoCd: string;
+  isDemo?: boolean;
 }
 
 type VoteChoice = "FOR" | "AGAINST" | "ABSTAIN";
@@ -52,20 +53,11 @@ export default function ProxyPage() {
 
   // マンション一覧取得
   useEffect(() => {
-    fetch("/api/units")
+    fetch("/api/condos")
       .then((r) => r.json())
-      .then((allUnits: (Unit & { condoId: string })[]) => {
-        const condoIds = [...new Set(allUnits.map((u) => u.condoId))];
-        Promise.all(
-          condoIds.map((id) =>
-            fetch(`/api/stats?condoId=${id}`)
-              .then((r) => r.json())
-              .then((s) => s.condo)
-          )
-        ).then((cs) => {
-          setCondos(cs);
-          if (cs.length > 0) setSelectedCondoId(cs[0].id);
-        });
+      .then((cs: Condo[]) => {
+        setCondos(cs);
+        if (cs.length > 0) setSelectedCondoId(cs[0].id);
       });
   }, []);
 
@@ -180,23 +172,40 @@ export default function ProxyPage() {
     }
   };
 
+  const selectedCondo = condos.find((c) => c.id === selectedCondoId);
+  const isDemo = selectedCondo?.isDemo === true;
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-slate-800">代理入力（紙回答）</h1>
 
       {/* マンション選択 */}
       {condos.length > 1 && (
-        <select
-          value={selectedCondoId}
-          onChange={(e) => setSelectedCondoId(e.target.value)}
-          className="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {condos.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <div className="bg-white rounded-xl p-4 shadow flex items-center gap-3">
+          <label className="text-sm font-medium text-slate-600 whitespace-nowrap">管理組合：</label>
+          <select
+            value={selectedCondoId}
+            onChange={(e) => setSelectedCondoId(e.target.value)}
+            className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {condos.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.isDemo ? "[サンプル] " : ""}{c.name}（{c.condoCd}）
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* デモバナー */}
+      {isDemo && (
+        <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-center gap-3">
+          <span className="text-2xl">🎭</span>
+          <div>
+            <div className="font-bold text-amber-800">サンプルデータを表示中</div>
+            <div className="text-sm text-amber-700">このマンションはデモ用サンプルです。代理入力の保存はできません。</div>
+          </div>
+        </div>
       )}
 
       {units.length === 0 ? (
@@ -308,18 +317,20 @@ export default function ProxyPage() {
                 )}
 
                 {/* 担当者名 */}
-                <div>
-                  <label className="block text-sm text-slate-600 mb-1">
-                    入力担当者名 * <span className="text-xs text-slate-400">（監査ログに記録されます）</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={inputBy}
-                    onChange={(e) => setInputBy(e.target.value)}
-                    placeholder="担当者名を入力"
-                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+                {!isDemo && (
+                  <div>
+                    <label className="block text-sm text-slate-600 mb-1">
+                      入力担当者名 * <span className="text-xs text-slate-400">（監査ログに記録されます）</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={inputBy}
+                      onChange={(e) => setInputBy(e.target.value)}
+                      placeholder="担当者名を入力"
+                      className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
 
                 {/* 議案ごとの選択 */}
                 <div className="space-y-3">
@@ -337,11 +348,14 @@ export default function ProxyPage() {
                         {(["FOR", "AGAINST", "ABSTAIN"] as VoteChoice[]).map((choice) => (
                           <button
                             key={choice}
-                            onClick={() => handleChoiceChange(agenda.id, choice)}
+                            onClick={() => !isDemo && handleChoiceChange(agenda.id, choice)}
+                            disabled={isDemo}
                             className={`flex-1 py-2 border-2 rounded-lg text-sm font-medium transition-all ${
-                              ballots[agenda.id] === choice
-                                ? `${CHOICE_LABELS[choice].color} border-current font-bold scale-105`
-                                : "border-slate-200 text-slate-500 hover:border-slate-300"
+                              isDemo
+                                ? "border-slate-100 text-slate-400 cursor-not-allowed"
+                                : ballots[agenda.id] === choice
+                                  ? `${CHOICE_LABELS[choice].color} border-current font-bold scale-105`
+                                  : "border-slate-200 text-slate-500 hover:border-slate-300"
                             }`}
                           >
                             {CHOICE_LABELS[choice].label}
@@ -353,7 +367,7 @@ export default function ProxyPage() {
                 </div>
 
                 {/* 送信ボタン */}
-                {!warning.show && (
+                {!warning.show && !isDemo && (
                   <button
                     onClick={() => handleSubmit(false)}
                     disabled={loading}

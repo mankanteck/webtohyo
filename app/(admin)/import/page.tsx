@@ -382,6 +382,10 @@ function ManageTab() {
   const [showAddAgenda, setShowAddAgenda] = useState(false);
   const [showAddUnit, setShowAddUnit] = useState(false);
 
+  // マンション名編集
+  const [editingCondoName, setEditingCondoName] = useState(false);
+  const [condoNameInput, setCondoNameInput] = useState("");
+
   // 議案編集フォームの一時値
   const [agendaEditValues, setAgendaEditValues] = useState<{ title: string; resolutionType: string }>({
     title: "",
@@ -429,6 +433,42 @@ function ManageTab() {
     loadAgendas();
     loadUnits();
   }, [selectedCondoId]);
+
+  const saveCondoName = async () => {
+    if (!condoNameInput.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/condos", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: selectedCondoId, name: condoNameInput }),
+      });
+      if (!res.ok) throw new Error("保存に失敗しました");
+      const updated = await res.json();
+      setCondos((prev) => prev.map((c) => (c.id === updated.id ? { ...c, name: updated.name } : c)));
+      setEditingCondoName(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "エラーが発生しました");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteCondo = async () => {
+    if (!selectedCondo) return;
+    if (!window.confirm(`「${selectedCondo.name}」を削除しますか？\n部屋・議案・投票データもすべて削除されます。この操作は取り消せません。`)) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/condos?id=${selectedCondoId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("削除に失敗しました");
+      setCondos((prev) => prev.filter((c) => c.id !== selectedCondoId));
+      setSelectedCondoId("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "エラーが発生しました");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const loadAgendas = async () => {
     const res = await fetch(`/api/agendas?condoId=${selectedCondoId}`);
@@ -588,18 +628,29 @@ function ManageTab() {
       {/* マンション選択 */}
       <div className="bg-white rounded-xl p-5 shadow">
         <label className="block text-sm font-medium text-slate-700 mb-2">マンション選択</label>
-        <select
-          value={selectedCondoId}
-          onChange={(e) => setSelectedCondoId(e.target.value)}
-          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">-- マンションを選択 --</option>
-          {condos.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.isDemo ? "[サンプル] " : ""}{c.name}（{c.condoCd}）
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <select
+            value={selectedCondoId}
+            onChange={(e) => setSelectedCondoId(e.target.value)}
+            className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">-- マンションを選択 --</option>
+            {condos.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.isDemo ? "[サンプル] " : ""}{c.name}（{c.condoCd}）
+              </option>
+            ))}
+          </select>
+          {selectedCondoId && !isDemo && (
+            <button
+              onClick={deleteCondo}
+              disabled={saving}
+              className="px-3 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm hover:bg-red-100 disabled:opacity-50 whitespace-nowrap"
+            >
+              🗑 削除
+            </button>
+          )}
+        </div>
       </div>
 
       {/* デモバナー */}
@@ -615,6 +666,47 @@ function ManageTab() {
 
       {selectedCondoId && (
         <>
+          {/* マンション名編集 */}
+          {!isDemo && (
+            <div className="bg-white rounded-xl p-5 shadow">
+              <h2 className="font-bold text-slate-800 mb-3">マンション情報</h2>
+              {editingCondoName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={condoNameInput}
+                    onChange={(e) => setCondoNameInput(e.target.value)}
+                    className={`flex-1 ${inputCls}`}
+                    autoFocus
+                  />
+                  <button
+                    onClick={saveCondoName}
+                    disabled={saving || !condoNameInput.trim()}
+                    className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    保存
+                  </button>
+                  <button
+                    onClick={() => setEditingCondoName(false)}
+                    className="px-3 py-1 bg-slate-100 text-slate-600 rounded text-sm hover:bg-slate-200"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-slate-700 font-medium">{selectedCondo?.name}</span>
+                  <button
+                    onClick={() => { setCondoNameInput(selectedCondo?.name ?? ""); setEditingCondoName(true); }}
+                    className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded hover:bg-blue-50"
+                  >
+                    編集
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 議案管理 */}
           <div className="bg-white rounded-xl p-5 shadow">
             <h2 className="font-bold text-slate-800 mb-4">議案管理</h2>

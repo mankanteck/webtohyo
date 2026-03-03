@@ -15,6 +15,16 @@ function LoginContent() {
     }
   }, [authStatus, router]);
 
+  const services = {
+    async validateCustomSignUp(formData: Record<string, string>) {
+      const errors: Record<string, string> = {};
+      if (formData.password && formData.password.length < 8) {
+        errors.password = "パスワードは8文字以上で入力してください";
+      }
+      return errors;
+    },
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center gap-6">
       <div className="text-center">
@@ -22,7 +32,7 @@ function LoginContent() {
         <h1 className="text-xl font-bold text-slate-800">マンション総会</h1>
         <p className="text-sm text-slate-500">電子投票管理システム</p>
       </div>
-      <Authenticator socialProviders={["google"]} />
+      <Authenticator socialProviders={["google"]} services={services} />
     </div>
   );
 }

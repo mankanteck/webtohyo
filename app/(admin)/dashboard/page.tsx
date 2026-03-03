@@ -146,7 +146,7 @@ export default function DashboardPage() {
           <span className="text-2xl">🎭</span>
           <div>
             <div className="font-bold text-amber-800">サンプルデータを表示中</div>
-            <div className="text-sm text-amber-700">このマンションはデモ用サンプルです。編集・PDF出力はできません。</div>
+            <div className="text-sm text-amber-700">このマンションはデモ用サンプルです。編集はできません。PDFはデモ用途のみご利用ください。</div>
           </div>
         </div>
       )}
@@ -155,15 +155,13 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-800">管理ダッシュボード</h1>
         <div className="flex items-center gap-2">
-          {!isDemo && (
-            <button
+          <button
               onClick={handleQrSheetGenerate}
               disabled={qrPdfLoading || !stats}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {qrPdfLoading ? "⏳ 生成中..." : "📱 全戸QRコードPDF"}
             </button>
-          )}
           <button
             onClick={async () => {
               if (!selectedCondoId || refreshing) return;
@@ -360,15 +358,13 @@ export default function DashboardPage() {
                   {stats.notVotedCount} 件
                 </span>
               </h2>
-              {!isDemo && (
-                <button
+              <button
                   onClick={handlePdfGenerate}
                   disabled={pdfLoading || stats.notVotedCount === 0}
                   className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {pdfLoading ? "⏳ 生成中..." : "📋 督促状PDF一括生成"}
                 </button>
-              )}
             </div>
 
             {stats.notVotedUnits.length === 0 ? (

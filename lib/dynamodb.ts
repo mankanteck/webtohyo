@@ -118,6 +118,10 @@ export const condoStore = {
     }));
     return (res.Items ?? []) as Condo[];
   },
+
+  async deleteById(id: string): Promise<void> {
+    await doc.send(new DeleteCommand({ TableName: TABLES.condos, Key: { id } }));
+  },
 };
 
 // ── unitStore ────────────────────────────────────────────────────────────────
@@ -265,5 +269,9 @@ export const voteStore = {
 
   async saveMany(votes: Vote[]): Promise<void> {
     await batchPut(TABLES.votes, votes as unknown as Record<string, unknown>[]);
+  },
+
+  async deleteById(id: string): Promise<void> {
+    await doc.send(new DeleteCommand({ TableName: TABLES.votes, Key: { id } }));
   },
 };
