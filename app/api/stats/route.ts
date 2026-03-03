@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unitStore, voteStore, agendaStore } from "@/lib/dynamodb";
 import { authorizeCondoAccess } from "@/lib/auth";
+import { maskName } from "@/lib/mask";
 
 export async function GET(req: NextRequest) {
   const condoId = req.nextUrl.searchParams.get("condoId");
@@ -55,11 +56,11 @@ export async function GET(req: NextRequest) {
     totalVotingRights,
     votedVotingRights,
     quorumReached:     votedUnits.length >= quorumTarget,
-    notVotedUnits:     notVoted,
+    notVotedUnits:     notVoted.map((u) => ({ ...u, ownerName: maskName(u.ownerName) })),
     allUnits:          units.map((u) => ({
       id:           u.id,
       roomNo:       u.roomNo,
-      ownerName:    u.ownerName,
+      ownerName:    maskName(u.ownerName),
       accessToken:  u.accessToken,
       votingRights: u.votingRights,
     })),

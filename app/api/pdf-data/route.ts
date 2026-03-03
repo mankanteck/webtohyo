@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unitStore } from "@/lib/dynamodb";
 import { authorizeCondoAccess } from "@/lib/auth";
+import { maskName } from "@/lib/mask";
 
 export async function GET(req: NextRequest) {
   const condoId = req.nextUrl.searchParams.get("condoId");
@@ -16,5 +17,8 @@ export async function GET(req: NextRequest) {
     .filter((u) => !u.isVoted)
     .sort((a, b) => a.roomNo.localeCompare(b.roomNo, undefined, { numeric: true }));
 
-  return NextResponse.json({ condo, notVotedUnits });
+  return NextResponse.json({
+    condo,
+    notVotedUnits: notVotedUnits.map((u) => ({ ...u, ownerName: maskName(u.ownerName) })),
+  });
 }

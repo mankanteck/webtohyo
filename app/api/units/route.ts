@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unitStore, condoStore } from "@/lib/dynamodb";
 import { authorizeCondoAccess } from "@/lib/auth";
+import { maskName } from "@/lib/mask";
 
 export async function GET(req: NextRequest) {
   const condoId = req.nextUrl.searchParams.get("condoId");
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
   if (!auth.authorized) return NextResponse.json({ error: "Unauthorized" }, { status: auth.status });
 
   const units = await unitStore.getByCondoId(condoId);
-  return NextResponse.json(units);
+  return NextResponse.json(units.map((u) => ({ ...u, ownerName: maskName(u.ownerName) })));
 }
 
 export async function POST(req: NextRequest) {
