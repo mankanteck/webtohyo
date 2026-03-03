@@ -12,6 +12,7 @@ frontend:
         - npm ci --cache .npm --prefer-offline
     build:
       commands:
+        - echo "=== ENV CHECK === MASK_NAMES=${MASK_NAMES}"
         - npm run build
   artifacts:
     baseDirectory: .next
