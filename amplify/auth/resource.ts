@@ -1,13 +1,6 @@
 import { defineAuth, secret } from "@aws-amplify/backend";
 
 export const auth = defineAuth({
-  password: {
-    minLength: 8,
-    requireNumbers: false,
-    requireLowercase: false,
-    requireUppercase: false,
-    requireSpecialCharacters: false,
-  },
   loginWith: {
     email: true,
     externalProviders: {
